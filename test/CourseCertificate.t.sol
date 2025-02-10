@@ -57,7 +57,7 @@ contract CourseCertificateTest is Test {
         // Tentativa de mint por não-dono
         certificate.mintCertificate(
             student,
-            "Maria Souza",
+            "Jose Souza",
             "Smart Contracts",
             "Web3 Academy"
         );
