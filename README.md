@@ -19,7 +19,7 @@ forge install OpenZeppelin/openzeppelin-contracts --no-commit
 - Alteração do nome do arquivo principal e exclusão dos outros na pasta script e test:
 Counter.sol para "NOME_DESEJADO.sol" na pasta "src"
 
-- Adiciado o caminho das libs no foundry.toml (caso necessário se não for instalado):
+- Adicionado o caminho das libs no foundry.toml (caso necessário se não for instalado):
 [profile.default]
 libs = ["lib"]
 
@@ -55,6 +55,8 @@ Se o dono do contrato é a instituição (institution) / O estudante não possui
 
 - Código para a execução do testes:
 forge test -vvv
+ou usando o nome do contrato e mais alguns detalhes:
+forge test --match-contract CourseCertificateTest -vvv
 
 ### 6 Criação do contrato do script CourseCertificate.s.sol:
 - Objetivo:
@@ -63,7 +65,7 @@ Permite implantar o contrato em diferentes redes (testnet/mainnet), vamos usar a
 ### 7 Teste local no fork ANVIL
 
 - Rodar o anvil com tempo determinado (o valor pode ser alterado que representa a quantidade em segundos - exemplo de uso):
-anvil --block-time 30 
+anvil --block-time 30
 
 ----------------------------------- Outros possíveis exemplos de uso ----------------------------------------
 
@@ -88,7 +90,7 @@ RPC_URL=http://localhost:8545
 INSTITUTION_ADDRESS="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" # Endereço da conta (0) do Anvil
 INSTITUTION_PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" # Chave conta (0) do Anvil
 
-- Carregue as Variáveis de Ambiente no terminal "bash":
+- Carregue as Variáveis de Ambiente em outro terminal "bash" (no VS Code, escolhe a opção de divisão de terminal, para melhor visualização da execução dos próximos passos e mint na blockchain local):
 source .env
 
 - Abre o terminal em "bash" para exportar apontando para a blockchain local do Anvil:
@@ -144,16 +146,16 @@ forge script script/Interact.s.sol:InteractScript --rpc-url $RPC_URL --private-k
  4. Confirmação: A transação é incluída em um bloco no Anvil.
 
 - Verifique a confirmação que o certificado foi emitido e apresenta o dono (owner - contrato respectivo ao "estudante" permitido):
-cast call $CONTRACT_ADDRESS "ownerOf(uint256)" 0 --rpc-url $RPC_URL
+cast call $CONTRACT_ADDRESS "ownerOf(uint256)" 123 --rpc-url $RPC_URL
 
 - Emite a URI Base64 com os dados do certificado:
-cast call $CONTRACT_ADDRESS "tokenURI(uint256)" 0 --rpc-url $RPC_URL
+cast call $CONTRACT_ADDRESS "tokenURI(uint256)" 123 --rpc-url $RPC_URL
 
 - Para obtenção da transformação dos dados codificados, segue:
-  1. **Remover o prefixo "0x"**: A string começa com "0x", que é comum em representações hexadecimais, mas não faz parte dos dados em si;
-  2. **Exclusão da cadeia de zeros longa**: Faz a exclusão da sequência de zeros e mais 3 dígitos após a quantidade os zeros, sejam eles números ou letras, como também os zeros no fim da calda da string (números ou letras);
-  3. **Converter hexadecimal para bytes**: Usar uma ferramenta ou biblioteca para converter a string hexadecimal em uma sequência de bytes.
-  4. **Decodificar base64 para texto**: Utilizar um decodificador base64 para transformar os bytes em texto legível.
+  1. **Remover o prefixo "0x"**: A string começa com "0x" e identifique a parte UTF-8 codificada. O valor real começa após o cabeçalho ABI, mas não faz parte dos dados em si;
+  2. **Exclusão da cadeia de zeros longa**: Faz a exclusão da sequência de zeros e mais 3 dígitos após a quantidade os zeros (sejam eles números ou letras), como também os zeros no fim da calda da string;
+  3. **Converter hexadecimal para base64**: Para converter a string hexadecimal em uma sequência de bytes ainda bem bash: echo "VALORES_QUE_SOBRARAM_DA_STRING" | xxd -r -p
+  4. **Decodificar base64 para texto**: Decodificador base64 para transformar os bytes em texto legível, retira o cabeçalho "data:application/json;base64," até a vírgula e ainda em bash: echo "STRING_RESULTANTE_DO_BASE64" | base64 -d
 
 - Exemplo presente, após executar o script "Interact.s.sol" com os dados presentes do aluno, junto aos contidos em "CourseCertificate.sol" resultaram na string:
 
@@ -161,16 +163,33 @@ cast call $CONTRACT_ADDRESS "tokenURI(uint256)" 0 --rpc-url $RPC_URL
 
 Assim, aos passos:
 - 1. 0x:
-0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000015d646174613a6170706c69636174696f6e2f6a736f6e3b6261736536342c65794a755957316c496a6f67496b4e6c636e52705a6d6c6a595752764947526c4946646c596a4d694c434a6b5a584e6a636d6c7764476c766269493649434a445a584a3061575a705932466b6279426c62576c306157527649484276636942436247396a61324e6f59576c7549464e6a6147397662434973496d463064484a70596e56305a584d694f69426265794a30636d4670644639306558426c496a6f67496b567a6448566b595735305a53497349434a32595778315a53493649434a4262476c6a5a534a394c48736964484a686158526664486c775a53493649434a4464584a7a6279497349434a32595778315a53493649434a585a57497a496e307365794a30636d4670644639306558426c496a6f67496b5268644745694c434169646d4673645755694f6941694d5463304d4451354d4441784d434a395858303d000000
+0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000015d646174613a6170706c69636174696f6e2f6a736f6e3b6261736536342c65794a755957316c496a6f67496b4e6c636e52705a6d6c6a595752764947526c4946646c596a4d694c434a6b5a584e6a636d6c7764476c766269493649434a445a584a3061575a705932466b6279426c62576c306157527649484276636942436247396a61324e6f59576c7549464e6a6147397662434973496d463064484a70596e56305a584d694f69426265794a30636d4670644639306558426c496a6f67496b567a6448566b595735305a53497349434a32595778315a53493649434a4262476c6a5a534a394c48736964484a686158526664486c775a53493649434a4464584a7a6279497349434a32595778315a53493649434a585a57497a496e307365794a30636d4670644639306558426c496a6f67496b5268644745694c434169646d4673645755694f6941694d5463304d4451354d4441784d434a395858303d000000 | xxd -r -p
 
-- 2. 0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000015d + 000000:
-646174613a6170706c69636174696f6e2f6a736f6e3b6261736536342c65794a755957316c496a6f67496b4e6c636e52705a6d6c6a595752764947526c4946646c596a4d694c434a6b5a584e6a636d6c7764476c766269493649434a445a584a3061575a705932466b6279426c62576c306157527649484276636942436247396a61324e6f59576c7549464e6a6147397662434973496d463064484a70596e56305a584d694f69426265794a30636d4670644639306558426c496a6f67496b567a6448566b595735305a53497349434a32595778315a53493649434a4262476c6a5a534a394c48736964484a686158526664486c775a53493649434a4464584a7a6279497349434a32595778315a53493649434a585a57497a496e307365794a30636d4670644639306558426c496a6f67496b5268644745694c434169646d4673645755694f6941694d5463304d4451354d4441784d434a395858303d
+- 2. 0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000015d + 000000, em bash:
+echo "646174613a6170706c69636174696f6e2f6a736f6e3b6261736536342c65794a755957316c496a6f67496b4e6c636e52705a6d6c6a595752764947526c4946646c596a4d694c434a6b5a584e6a636d6c7764476c766269493649434a445a584a3061575a705932466b6279426c62576c306157527649484276636942436247396a61324e6f59576c7549464e6a6147397662434973496d463064484a70596e56305a584d694f69426265794a30636d4670644639306558426c496a6f67496b567a6448566b595735305a53497349434a32595778315a53493649434a4262476c6a5a534a394c48736964484a686158526664486c775a53493649434a4464584a7a6279497349434a32595778315a53493649434a585a57497a496e307365794a30636d4670644639306558426c496a6f67496b5268644745694c434169646d4673645755694f6941694d5463304d4451354d4441784d434a395858303d" | xxd -r -p
 
-- 3. Hex -> base64:
-eyJuYW1lIjogIkNlcnRpZmljYWRvIGRlIFdlYjMiLCJkZXNjcmlwdGlvbiI6ICJDZXJ0aWZpY2FkbyBlbWl0aWRvIHBvciBCbG9ja2NoYWluIFNjaG9vbCIsImF0dHJpYnV0ZXMiOiBbeyJ0cmFpdF90eXBlIjogIkVzdHVkYW50ZSIsICJ2YWx1ZSI6ICJBbGljZSJ9LHsidHJhaXRfdHlwZSI6ICJDdXJzbyIsICJ2YWx1ZSI6ICJXZWIzIn0seyJ0cmFpdF90eXBlIjogIkRhdGEiLCAidmFsdWUiOiAiMTc0MDQ5MDAxMCJ9XX0=
+- 3. Hex -> base64, em bash:
+echo "eyJuYW1lIjogIkNlcnRpZmljYWRvIGRlIFdlYjMiLCJkZXNjcmlwdGlvbiI6ICJDZXJ0aWZpY2FkbyBlbWl0aWRvIHBvciBCbG9ja2NoYWluIFNjaG9vbCIsImF0dHJpYnV0ZXMiOiBbeyJ0cmFpdF90eXBlIjogIkVzdHVkYW50ZSIsICJ2YWx1ZSI6ICJBbGljZSJ9LHsidHJhaXRfdHlwZSI6ICJDdXJzbyIsICJ2YWx1ZSI6ICJXZWIzIn0seyJ0cmFpdF90eXBlIjogIkRhdGEiLCAidmFsdWUiOiAiMTc0MDQ5MDAxMCJ9XX0=" | base64 -d
 
 - 4. base64 -> texto:
-{"name": "Certificado de Web3","description": "Certificado emitido por Blockchain School","attributes": [{"trait_type": "Estudante", "value": "Alice"},{"trait_type": "Curso", "value": "Web3"},{"trait_type": "Data", "value": "1740490010"}]}
+{
+  "name": "Certificado de Web3",
+  "description": "Certificado emitido por Blockchain School",
+  "attributes": [
+    {
+      "trait_type": "Estudante", 
+      "value": "Alice"
+      },
+    {
+      "trait_type": "Curso", 
+      "value": "Web3"
+      },
+    {
+      "trait_type": "Data", 
+      "value": "1740490010"
+    }
+  ]
+}
 
 #### Formas de uso com a rede testnet Sepolia
 

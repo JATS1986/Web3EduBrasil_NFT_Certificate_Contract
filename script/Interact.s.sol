@@ -15,7 +15,8 @@ contract InteractScript is Script {
 
         vm.startBroadcast();
         //Chama a função para emitir um certificado com os respectivos dados
-        certificate.mintCertificate(student, "Alice", "Web3", "Blockchain School");
+        //TOKEN_ID, student, STUDENT_NAME, COURSE_NAME, INSTITUTION_NAME
+        certificate.mintCertificate(123, student, "Alice", "Web3", "Blockchain School");
         vm.stopBroadcast();
     }
 }
