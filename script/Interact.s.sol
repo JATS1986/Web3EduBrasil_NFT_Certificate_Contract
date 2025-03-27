@@ -7,7 +7,6 @@ import {CourseCertificate} from "../src/CourseCertificate.sol";
 contract InteractScript is Script {
     //Função obrigatória em scripts do Foundry
     function run() external {
-        
         CourseCertificate certificate = CourseCertificate(vm.envAddress("CONTRACT_ADDRESS"));
 
         // Use o endereço de um aluno (ex: segunda conta do Anvil)

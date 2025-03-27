@@ -11,7 +11,7 @@ contract CourseCertificateScript is Script {
         address institutionAddress = vm.envAddress("INSTITUTION_ADDRESS"); // Endereço da instituição (variável de ambiente - .env)
 
         vm.startBroadcast(); // Inicia a transação na blockchain
-        CourseCertificate certificate = new CourseCertificate(institutionAddress); // Implanta o contrato, passando o endereço da instituição para o construtor
+        CourseCertificate certificate = new CourseCertificate(institutionAddress, "Solidity Developer", "SOLDEV"); // Implanta o contrato, passando o endereço da instituição para o construtor
         vm.stopBroadcast(); // Finaliza a transação
 
         return certificate; // Retorna a instância do contrato implantado para uso futuro (opcional)

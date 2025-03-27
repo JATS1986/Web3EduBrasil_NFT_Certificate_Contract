@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {CourseCertificate} from "../src/CourseCertificate.sol";
@@ -9,7 +9,7 @@ import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 
 contract CourseCertificateTest is Test {
     CourseCertificate public certificate;
-    
+
     address public institution = address(0x123); // Endereço da instituição
     address public student = address(0x456); // Endereço do estudante
     address public attacker = address(0x789); // Endereço de atacante externo
@@ -17,11 +17,11 @@ contract CourseCertificateTest is Test {
     uint256 constant TOKEN_ID = 123; // ID fixo para testes
     string constant STUDENT_NAME = "Joao Silva";
     string constant COURSE_NAME = "Blockchain Avancado";
-    string constant INSTITUTION_NAME = "Web3 Academy";    
+    string constant INSTITUTION_NAME = "Web3 Academy";
 
     function setUp() public {
         vm.prank(institution);
-        certificate = new CourseCertificate(institution); // Implanta o contrato
+        certificate = new CourseCertificate(institution, "Solidity Developer", "SOLDEV"); // Implanta o contrato
     }
 
     // Testa se o contrato é implantado corretamente
@@ -33,13 +33,7 @@ contract CourseCertificateTest is Test {
     // Testa a emissao de um certificado
     function test_MintCertificate() public {
         vm.prank(institution); // Simula a instituição chamando a função
-        certificate.mintCertificate(
-            TOKEN_ID,
-            student, 
-            STUDENT_NAME, 
-            COURSE_NAME, 
-            INSTITUTION_NAME
-        );
+        certificate.mintCertificate(TOKEN_ID, student, STUDENT_NAME, COURSE_NAME, INSTITUTION_NAME);
 
         // Verifica se o estudante recebeu o NFT com um TOKEN_ID
         assertEq(certificate.ownerOf(TOKEN_ID), student, "Dono incorreto");
@@ -60,46 +54,46 @@ contract CourseCertificateTest is Test {
     function test_OnlyOwnerCanMint() public {
         vm.prank(attacker); // Simula um nao-dono chamando a função
         // Define o erro esperado (OwnableUnauthorizedAccount) com o endereço do student
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Ownable.OwnableUnauthorizedAccount.selector,
-                attacker
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, attacker));
         // Tentativa de mint por não-dono
-        certificate.mintCertificate(
-            TOKEN_ID,
-            student,
-            STUDENT_NAME,
-            COURSE_NAME,
-            INSTITUTION_NAME
-        );
+        certificate.mintCertificate(TOKEN_ID, student, STUDENT_NAME, COURSE_NAME, INSTITUTION_NAME);
         /* Um endereço não autorizado (atacante) tenta emitir um certificado 
         Verifica se a transação é revertida com a mensagem Ownable: caller is not the owner */
-    }    
-    
+    }
+
     // Teste de metadados (tokenURI)
     function test_TokenURI() public {
         vm.prank(institution);
         certificate.mintCertificate(TOKEN_ID, student, STUDENT_NAME, COURSE_NAME, INSTITUTION_NAME);
-        
+
         string memory uri = certificate.tokenURI(TOKEN_ID); // Usa TOKEN_ID
 
         // Verifica se o JSON contem os dados corretos
-        string memory expectedJson = string(abi.encodePacked(
-            '{"name": "Certificado de ', COURSE_NAME, '",',
-            '"description": "Certificado emitido por ', INSTITUTION_NAME, '",',
-            '"attributes": [',
-            '{"trait_type": "Estudante", "value": "', STUDENT_NAME, '"},',
-            '{"trait_type": "Curso", "value": "', COURSE_NAME, '"},',
-            '{"trait_type": "Data", "value": "', Strings.toString(block.timestamp), '"}',
-            ']}'
-        ));
+        string memory expectedJson = string(
+            abi.encodePacked(
+                '{"name": "Certificado de ',
+                COURSE_NAME,
+                '",',
+                '"description": "Certificado emitido por ',
+                INSTITUTION_NAME,
+                '",',
+                '"attributes": [',
+                '{"trait_type": "Estudante", "value": "',
+                STUDENT_NAME,
+                '"},',
+                '{"trait_type": "Curso", "value": "',
+                COURSE_NAME,
+                '"},',
+                '{"trait_type": "Data", "value": "',
+                Strings.toString(block.timestamp),
+                '"}',
+                "]}"
+            )
+        );
 
         // Codifica o JSON esperado em Base64
-        string memory expectedUri = string(
-            abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(expectedJson)))
-        );
+        string memory expectedUri =
+            string(abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(expectedJson))));
 
         // Compara as URIs diretamente
         assertEq(uri, expectedUri, "URI incorreta");
@@ -107,12 +101,7 @@ contract CourseCertificateTest is Test {
 
     // Teste de recuperação de dados de certificado inexistente
     function test_GetNonExistentCertificate() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                CourseCertificate.TokenDoesNotExist.selector,
-                TOKEN_ID
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(CourseCertificate.TokenDoesNotExist.selector, TOKEN_ID));
         certificate.getCertificateData(TOKEN_ID); // Token que nao existe
     }
 
@@ -122,30 +111,25 @@ contract CourseCertificateTest is Test {
         vm.warp(specificTime);
         vm.prank(institution);
         certificate.mintCertificate(TOKEN_ID, student, STUDENT_NAME, COURSE_NAME, INSTITUTION_NAME);
-        
+
         CourseCertificate.CertificateData memory data = certificate.getCertificateData(TOKEN_ID);
         assertEq(data.completionDate, specificTime, "Data de conclusao incorreta"); // Teste deterministico
-    }   
+    }
 
     // Testa se um certificado pode ser revogado pela instituição
     function test_RevokeCertificate() public {
         // Emite um certificado
         vm.prank(institution);
         certificate.mintCertificate(TOKEN_ID, student, STUDENT_NAME, COURSE_NAME, INSTITUTION_NAME);
-        
-        // Revoga o certificado 
+
+        // Revoga o certificado
         vm.prank(institution);
         certificate.revokeCertificate(TOKEN_ID); // Usa TOKEN_ID
-                
+
         // Verificações
         assertEq(certificate.balanceOf(student), 0, "Certificado nao foi queimado");
         // Verifica limpeza de dados
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                CourseCertificate.TokenDoesNotExist.selector,
-                TOKEN_ID
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(CourseCertificate.TokenDoesNotExist.selector, TOKEN_ID));
         certificate.getCertificateData(TOKEN_ID);
     }
 
@@ -153,14 +137,9 @@ contract CourseCertificateTest is Test {
     function test_NonOwnerRevoke() public {
         vm.prank(institution);
         certificate.mintCertificate(TOKEN_ID, student, STUDENT_NAME, COURSE_NAME, INSTITUTION_NAME);
-        
+
         vm.prank(attacker);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                bytes4(keccak256("OwnableUnauthorizedAccount(address)")),
-                attacker
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("OwnableUnauthorizedAccount(address)")), attacker));
         certificate.revokeCertificate(TOKEN_ID);
     }
 }
