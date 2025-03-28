@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
+import "forge-std/console.sol";
 import {CourseCertificate} from "../src/CourseCertificate.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -68,6 +69,9 @@ contract CourseCertificateTest is Test {
 
         string memory uri = certificate.tokenURI(TOKEN_ID); // Usa TOKEN_ID
 
+        console.log("URI: ", uri);
+
+
         // Verifica se o JSON contem os dados corretos
         string memory expectedJson = string(
             abi.encodePacked(
@@ -122,6 +126,12 @@ contract CourseCertificateTest is Test {
         vm.prank(institution);
         certificate.mintCertificate(TOKEN_ID, student, STUDENT_NAME, COURSE_NAME, INSTITUTION_NAME);
 
+
+        //TESTE TEMPORARIO para verificar se o tokenID pode ser reutilizado
+        vm.prank(institution);
+        vm.expectRevert(abi.encodeWithSelector(CourseCertificate.TokenIdAlreadyExists.selector, TOKEN_ID));
+        certificate.mintCertificate(TOKEN_ID, student, "JOSE DA SILVA", "WEB3EDU SOLIDITY" , "WEB3EDUTECH");
+
         // Revoga o certificado
         vm.prank(institution);
         certificate.revokeCertificate(TOKEN_ID); // Usa TOKEN_ID
@@ -131,6 +141,17 @@ contract CourseCertificateTest is Test {
         // Verifica limpeza de dados
         vm.expectRevert(abi.encodeWithSelector(CourseCertificate.TokenDoesNotExist.selector, TOKEN_ID));
         certificate.getCertificateData(TOKEN_ID);
+
+        //Verifica se o ID pode ser  reutilizado
+        vm.prank(institution);
+        certificate.mintCertificate(TOKEN_ID, student, "JOSE DA SILVA", "WEB3EDU SOLIDITY" , "WEB3EDUTECH");
+        assertEq(certificate.ownerOf(TOKEN_ID), student, "Dono incorreto");
+        assertEq(certificate.balanceOf(student), 1, "Saldo incorreto");
+        CourseCertificate.CertificateData memory data = certificate.getCertificateData(TOKEN_ID);
+        assertEq(data.studentName, "JOSE DA SILVA", "Nome do estudante incorreto");
+        assertEq(data.courseName, "WEB3EDU SOLIDITY", "Nome do curso incorreto");
+        assertEq(data.institutionName, "WEB3EDUTECH", "Instituicao incorreta");
+        assertEq(data.completionDate, block.timestamp, "Data de conclusao incorreta");
     }
 
     // Teste de revogação por não-dono
@@ -142,4 +163,7 @@ contract CourseCertificateTest is Test {
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("OwnableUnauthorizedAccount(address)")), attacker));
         certificate.revokeCertificate(TOKEN_ID);
     }
+
+
+
 }
