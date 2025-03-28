@@ -1,6 +1,10 @@
 # Web3EduBrasil_NFT_Certificate_Contract
 Projeto solidity NFT (didático) através da WEB3EDU
 
+## PROMPT  PARA IA AUDITAR O CONTRATO:
+
+Como auditor de smart contracts e desenvolvedor experiente na área, realize uma auditoria detalhada deste contrato inteligente. Identifique vulnerabilidades de segurança, riscos potenciais e pontos de otimização. Além disso, sugira melhorias de código,boas práticas e aprimoramentos para eficiência de gas, conformidade com padrões do setor e escalabilidade.
+
 ## Passos para o desenvolvimento do projeto através da IDE VScode e Foundry
 
 ### 1 Criação do projeto em Foundry (usuário já deve ter instalado anteriormente):
